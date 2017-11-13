@@ -14,9 +14,9 @@ library(rpart)
 library(party)
 ```
 
-#Upload Data
+## Part I
 ```{r}
-D1 <- read.table("intelligent_tutor.csv", sep = ",", header = TRUE)
+D1 <- read.csv("intelligent_tutor.csv")
 ```
 
 ##Classification Tree
@@ -32,6 +32,8 @@ printcp(c.tree)
 post(c.tree, file = "tree.ps", title = "Session Completion Action: 1 - Ask teacher, 2 - Start new session, 3 - Give up")
 
 ```
+## Part II
+
 #Regression Tree
 
 We want to see if we can build a decision tree to help teachers decide which students to follow up with, based on students' performance in Assistments. We will create three groups ("teacher should intervene", "teacher should monitor student progress" and "no action") based on students' previous use of the system and how many hints they use. To do this we will be building a decision tree using the "party" package. The party package builds decision trees based on a set of statistical stopping rules.
@@ -56,19 +58,31 @@ score_ctree <- ctree(factor(advice) ~ prior_prob_count + prior_percent_correct +
 plot(score_ctree)
 ```
 
-Please interpret the tree, which two behaviors do you think the teacher should most closely pay attemtion to?
+Please interpret the tree, which two behaviors do you think the teacher should most closely pay attention to?
+
+The teacher should pay most attention to students who take >12 hints and have prior_percent_correct <= .629.
 
 #Test Tree
-Upload the data "intelligent_tutor_new.csv". This is a data set of a differnt sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
+Upload the data "intelligent_tutor_new.csv". This is a data set of a different sample of students doing the same problems in the same system. We can use the tree we built for the previous data set to try to predict the "advice" we should give the teacher about these new students. 
 
 ```{r}
 #Upload new data
 
-D2 <- 
+D2 <- read.csv("intelligent_tutor_new.csv")
 
 #Generate predicted advice for new students based on tree generated from old students
 
 D2$prediction <- predict(score_ctree, D2)
 
 ``` 
-Compare the predicted advice with the actual advice that these studnts recieved. What is the difference between the observed and predicted results?
+## Part III
+Compare the predicted advice with the actual advice that these students recieved. What is the difference between the observed and predicted results?
+
+```{r}
+D2$count <- ifelse(D2$prediction == "no action", 1, ifelse(D2$prediction == "monitor", 2, 3))
+D3 <- as.data.frame(D2$count)
+D3 <- filter(D3, D3$`D2$count` > 1)
+count(D3)
+```
+
+All students passed with a score of 1 (observed results). While there was no predicted result which advised the teacher to 'intervene' with a student, there were some students that teachers were advised to 'monitor' (n=84). Maybe the monitoring was not necessary if the students passed.
